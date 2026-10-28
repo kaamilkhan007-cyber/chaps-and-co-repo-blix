@@ -1,0 +1,4 @@
+# Netlify settings. The site is plain HTML, so there is no build step:
+# the project folder is published as-is. Security headers live in _headers.
+[build]
+  publish = "."
