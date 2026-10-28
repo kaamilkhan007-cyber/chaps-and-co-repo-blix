@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chaps &amp; Co | Barbershop &amp; Grooming</title>
+  <meta name="description" content="Chaps & Co is a classic barbershop offering sharp haircuts, beard trims and hot towel shaves.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Header / navigation -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="#top" class="logo">Chaps <span>&amp;</span> Co</a>
+      <button class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="site-nav">
+        <a href="#services">Services</a>
+        <a href="#about">About</a>
+        <a href="#team">Barbers</a>
+        <a href="#visit">Visit</a>
+        <a href="#book" class="btn btn-small">Book now</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="container hero-inner">
+        <p class="eyebrow">Barbershop &amp; Grooming</p>
+        <h1>Sharp cuts.<br>Good company.</h1>
+        <p class="hero-text">Classic barbering with a modern edge. Walk in looking good, walk out looking better.</p>
+        <div class="hero-actions">
+          <a href="#book" class="btn">Book an appointment</a>
+          <a href="#services" class="btn btn-outline">See prices</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Services -->
+    <section id="services" class="section">
+      <div class="container">
+        <p class="eyebrow">What we do</p>
+        <h2>Services &amp; prices</h2>
+        <div class="services-grid">
+          <article class="service">
+            <div class="service-head"><h3>Classic Haircut</h3><span class="price">R180</span></div>
+            <p>Consultation, cut, wash and style. Finished with a neck shave.</p>
+            <span class="duration">45 min</span>
+          </article>
+          <article class="service">
+            <div class="service-head"><h3>Skin Fade</h3><span class="price">R200</span></div>
+            <p>Precision fade blended down to the skin, any length on top.</p>
+            <span class="duration">45 min</span>
+          </article>
+          <article class="service">
+            <div class="service-head"><h3>Beard Trim &amp; Shape</h3><span class="price">R120</span></div>
+            <p>Shaped, lined up and finished with beard oil.</p>
+            <span class="duration">30 min</span>
+          </article>
+          <article class="service">
+            <div class="service-head"><h3>Hot Towel Shave</h3><span class="price">R160</span></div>
+            <p>Traditional straight razor shave with hot towels and balm.</p>
+            <span class="duration">40 min</span>
+          </article>
+          <article class="service">
+            <div class="service-head"><h3>Cut &amp; Beard Combo</h3><span class="price">R270</span></div>
+            <p>The full works: haircut plus beard trim and shape.</p>
+            <span class="duration">75 min</span>
+          </article>
+          <article class="service">
+            <div class="service-head"><h3>Kids Cut (under 12)</h3><span class="price">R120</span></div>
+            <p>A proper barbershop cut for the young chaps.</p>
+            <span class="duration">30 min</span>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- About -->
+    <section id="about" class="section section-dark">
+      <div class="container about-inner">
+        <div class="about-text">
+          <p class="eyebrow">Our story</p>
+          <h2>More than a haircut</h2>
+          <p>Chaps &amp; Co started with a simple idea: a barbershop where every client gets the time and attention they deserve. No rushing, no guesswork. Just skilled barbers, a cold drink and good conversation.</p>
+          <p>Whether it's a quick tidy-up or a full transformation, we'll make sure you leave sharper than you came in.</p>
+        </div>
+        <ul class="stats">
+          <li><strong>10+</strong><span>Years of experience</span></li>
+          <li><strong>5k+</strong><span>Happy clients</span></li>
+          <li><strong>4.9★</strong><span>Average rating</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Team -->
+    <section id="team" class="section">
+      <div class="container">
+        <p class="eyebrow">Meet the team</p>
+        <h2>Our barbers</h2>
+        <div class="team-grid">
+          <article class="barber">
+            <div class="avatar">JM</div>
+            <h3>Barber Name</h3>
+            <p>Head Barber &middot; Fades &amp; tapers</p>
+          </article>
+          <article class="barber">
+            <div class="avatar">TK</div>
+            <h3>Barber Name</h3>
+            <p>Senior Barber &middot; Beards &amp; shaves</p>
+          </article>
+          <article class="barber">
+            <div class="avatar">AS</div>
+            <h3>Barber Name</h3>
+            <p>Barber &middot; Classic cuts &amp; kids</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Booking -->
+    <section id="book" class="section section-cream">
+      <div class="container book-inner">
+        <div>
+          <p class="eyebrow">Book a chair</p>
+          <h2>Make an appointment</h2>
+          <p>Pick a service and a time that suits you and we'll confirm by phone or WhatsApp. Walk-ins are welcome when a chair is free.</p>
+        </div>
+        <form class="book-form" id="book-form" novalidate>
+          <label>Name
+            <input type="text" name="name" required autocomplete="name">
+          </label>
+          <label>Phone
+            <input type="tel" name="phone" required autocomplete="tel">
+          </label>
+          <label>Service
+            <select name="service" required>
+              <option value="">Choose a service</option>
+              <option>Classic Haircut</option>
+              <option>Skin Fade</option>
+              <option>Beard Trim &amp; Shape</option>
+              <option>Hot Towel Shave</option>
+              <option>Cut &amp; Beard Combo</option>
+              <option>Kids Cut</option>
+            </select>
+          </label>
+          <div class="form-row">
+            <label>Date
+              <input type="date" name="date" required>
+            </label>
+            <label>Time
+              <input type="time" name="time" required min="09:00" max="18:00">
+            </label>
+          </div>
+          <button type="submit" class="btn">Request booking</button>
+          <p class="form-message" id="form-message" role="status"></p>
+        </form>
+      </div>
+    </section>
+
+    <!-- Visit -->
+    <section id="visit" class="section">
+      <div class="container visit-inner">
+        <div>
+          <p class="eyebrow">Find us</p>
+          <h2>Visit the shop</h2>
+          <p class="address">123 Example Street<br>Your Suburb, Your City</p>
+          <p><a href="tel:+27000000000">+27 00 000 0000</a><br><a href="mailto:hello@example.com">hello@example.com</a></p>
+        </div>
+        <div>
+          <h3>Opening hours</h3>
+          <table class="hours">
+            <tr><td>Monday – Friday</td><td>09:00 – 18:00</td></tr>
+            <tr><td>Saturday</td><td>08:00 – 15:00</td></tr>
+            <tr><td>Sunday</td><td>Closed</td></tr>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span class="logo">Chaps <span>&amp;</span> Co</span>
+      <p>&copy; <span id="year"></span> Chaps &amp; Co. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
