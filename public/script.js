@@ -235,6 +235,10 @@ function createBookingUI() {
       el("input", { type: "tel", name: "phone", required: true, maxlength: 20, autocomplete: "tel", inputmode: "tel" }),
     ]),
     el("label", {}, [
+      "Email",
+      el("input", { type: "email", name: "email", required: true, maxlength: 100, autocomplete: "email", inputmode: "email" }),
+    ]),
+    el("label", {}, [
       "Note for your barber ",
       el("span", { class: "muted", text: "(optional)" }),
       el("textarea", { name: "note", rows: 2, maxlength: 300 }),
@@ -492,13 +496,18 @@ async function submitBooking(event) {
   const form = ui.form.elements;
   const name = form.name.value.trim().replace(/\s+/g, " ");
   const phone = form.phone.value.trim();
-  const nameOk = name.length >= 2;
-  const phoneOk = /^[0-9 +()-]{9,20}$/.test(phone) && phone.replace(/\D/g, "").length >= 9;
-  form.name.classList.toggle("invalid", !nameOk);
-  form.phone.classList.toggle("invalid", !phoneOk);
-  if (!nameOk || !phoneOk) {
-    ui.message.textContent = !nameOk ? "Please enter your name." : "Please enter a valid phone number.";
-    (!nameOk ? form.name : form.phone).focus();
+  const email = form.email.value.trim().toLowerCase();
+  const note = form.note.value.trim();
+  const checks = [
+    [form.name, name.length >= 2, "Please enter your name."],
+    [form.phone, /^[0-9 +()-]{9,20}$/.test(phone) && phone.replace(/\D/g, "").length >= 9, "Please enter a valid phone number."],
+    [form.email, /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email), "Please enter a valid email address."],
+  ];
+  checks.forEach(([field, ok]) => field.classList.toggle("invalid", !ok));
+  const firstBad = checks.find(([, ok]) => !ok);
+  if (firstBad) {
+    ui.message.textContent = firstBad[2];
+    firstBad[0].focus();
     return;
   }
 
@@ -506,6 +515,15 @@ async function submitBooking(event) {
   ui.submit.disabled = true;
   ui.submit.textContent = "Booking…";
   ui.message.textContent = "";
+
+  // Open the WhatsApp tab now, while the tap still counts as a user action (browsers block
+  // pop-ups opened later). It's pointed at WhatsApp once the booking is saved, or closed.
+  let waTab = null;
+  try {
+    waTab = window.open("about:blank", "_blank");
+  } catch {
+    waTab = null;
+  }
 
   try {
     const response = await fetch("/api/book", {
@@ -518,14 +536,21 @@ async function submitBooking(event) {
         time: booking.time,
         name,
         phone,
-        note: form.note.value.trim(),
+        email,
+        note,
         company: form.company.value,
       }),
     });
     const data = await response.json().catch(() => ({}));
 
     if (response.status === 201 && data.ok) {
-      showConfirmation(data.booking);
+      const waLink = bookingWhatsAppLink(data.booking, { phone, email, note });
+      if (waTab && !waTab.closed) {
+        waTab.opener = null;
+        waTab.location.href = waLink;
+        waTab = null;
+      }
+      showConfirmation(data.booking, waLink);
       return;
     }
     if (response.status === 409 && data.error === "slot_taken") {
@@ -540,13 +565,33 @@ async function submitBooking(event) {
   } catch {
     ui.message.textContent = `We couldn't reach the booking system. Check your connection and try again, or call ${SHOP.phoneDisplay}.`;
   } finally {
+    if (waTab && !waTab.closed) waTab.close(); // booking didn't go through
     booking.submitting = false;
     ui.submit.disabled = false;
     ui.submit.textContent = "Confirm booking";
   }
 }
 
-function showConfirmation(saved) {
+// WhatsApp message from the customer to the shop with the confirmed booking
+function bookingWhatsAppLink(saved, { phone, email, note }) {
+  const lines = [
+    "Hi Chaps & Co, I've just booked an appointment on your website:",
+    "",
+    `Reference: ${saved.ref}`,
+    `Service: ${saved.serviceName} (${formatPrice(saved.price)})`,
+    `Professional: ${saved.proName}`,
+    `Date: ${longDate(saved.date)}`,
+    `Time: ${saved.time} – ${fromMinutes(saved.end)}`,
+    "",
+    `Name: ${saved.name}`,
+    `Phone: ${phone}`,
+    `Email: ${email}`,
+  ];
+  if (note) lines.push(`Note: ${note}`);
+  return whatsappLink(lines.join("\n"));
+}
+
+function showConfirmation(saved, waLink) {
   ui.doneText.replaceChildren(
     el("p", { class: "done-lead", text: `Thanks ${saved.name.split(" ")[0]}, your appointment is confirmed.` }),
     el("dl", { class: "summary" }, [
@@ -562,6 +607,16 @@ function showConfirmation(saved) {
       el("dd", { text: `${saved.time} – ${fromMinutes(saved.end)}` }),
       el("dt", { class: "total", text: "Pay at the shop" }),
       el("dd", { class: "total", text: formatPrice(saved.price) }),
+    ]),
+    el("div", { class: "wa-confirm" }, [
+      el("p", { text: "WhatsApp has opened with your booking details. Press send so we have them on WhatsApp too." }),
+      el("a", {
+        class: "btn btn-whatsapp btn-block",
+        href: waLink,
+        target: "_blank",
+        rel: "noopener noreferrer",
+        text: "Send booking on WhatsApp",
+      }),
     ]),
     el("p", { class: "muted small" }, [
       "Need to change or cancel? Call or WhatsApp us on ",

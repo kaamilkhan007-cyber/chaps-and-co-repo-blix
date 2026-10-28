@@ -85,7 +85,7 @@ function renderDays(days) {
                   el(
                     "tr",
                     {},
-                    ["Time", "Service", "Barber", "Customer", "Phone", "Note", "Ref", ""].map((h) => el("th", { text: h }))
+                    ["Time", "Service", "Barber", "Customer", "Phone", "Email", "Note", "Ref", ""].map((h) => el("th", { text: h }))
                   )
                 ),
                 el(
@@ -98,8 +98,15 @@ function renderDays(days) {
                       el("td", { text: b.anyPro ? `${b.proName} (any)` : b.proName }),
                       el("td", { text: b.name }),
                       el("td", {}, el("a", { href: `tel:${b.phone.replace(/[^0-9+]/g, "")}`, text: b.phone })),
+                      el("td", {}, b.email ? el("a", { href: `mailto:${b.email}`, text: b.email }) : ""),
                       el("td", { text: b.note || "" }),
-                      el("td", { text: b.ref }),
+                      el("td", {}, [
+                        b.ref,
+                        el("span", {
+                          class: "admin-cal",
+                          text: b.calendarEventId ? "In Google Calendar" : "Not in calendar",
+                        }),
+                      ]),
                       el(
                         "td",
                         {},

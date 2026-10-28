@@ -2,11 +2,13 @@
 // Re-checks the time on the server and claims it atomically before saving,
 // so a professional can only ever be booked once for any given time.
 import { PROFESSIONALS, daySlots, toMinutes } from "../../public/shop-data.js";
+import { addToCalendar, removeFromCalendar } from "../lib/calendar.js";
 import {
   claimSlot,
   cleanText,
   findPro,
   findService,
+  getBooking,
   isBookableDate,
   json,
   listDay,
@@ -41,6 +43,7 @@ export default async (req, context) => {
   const time = typeof body.time === "string" && /^\d{2}:\d{2}$/.test(body.time) ? body.time : null;
   const name = cleanText(body.name, 60);
   const phone = cleanText(body.phone, 20);
+  const email = cleanText(body.email, 100).toLowerCase();
   const note = cleanText(body.note, 300);
 
   if (!service) return fail("Please choose a service.");
@@ -50,6 +53,7 @@ export default async (req, context) => {
   if (!/^[0-9 +()-]{9,20}$/.test(phone) || phone.replace(/\D/g, "").length < 9) {
     return fail("Please enter a valid phone number.");
   }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return fail("Please enter a valid email address.");
 
   try {
     if (await tooManyAttempts(context.ip)) {
@@ -95,6 +99,7 @@ export default async (req, context) => {
         end,
         name,
         phone,
+        email,
         note,
         status: "confirmed",
         createdAt: new Date().toISOString(),
@@ -107,7 +112,21 @@ export default async (req, context) => {
         throw error;
       }
 
-      const { phone: _phone, note: _note, ...publicBooking } = booking;
+      // Add to Google Calendar after replying, so the customer never waits on Google.
+      // The event ID is saved on the booking so a cancellation can remove the event.
+      const calendarTask = addToCalendar(booking)
+        .then(async (eventId) => {
+          if (!eventId) return;
+          const current = await getBooking(date, booking.ref); // staff may have cancelled meanwhile
+          if (!current) return;
+          await saveBooking({ ...current, calendarEventId: eventId });
+          if (current.status === "cancelled") await removeFromCalendar(eventId);
+        })
+        .catch((error) => console.error("calendar sync failed", booking.ref, error));
+      if (typeof context.waitUntil === "function") context.waitUntil(calendarTask);
+      else await calendarTask;
+
+      const { phone: _phone, note: _note, email: _email, ...publicBooking } = booking;
       return json(201, { ok: true, booking: publicBooking });
     }
 

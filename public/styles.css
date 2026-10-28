@@ -627,6 +627,16 @@ body.has-cookie-banner .whatsapp-float { bottom: 120px; }
 .done-lead { font-weight: 600; font-size: 1.05rem; margin-bottom: 1rem; }
 .done-details { text-align: left; margin-bottom: 1.5rem; }
 .done-details .muted { text-align: center; }
+.wa-confirm {
+  background: #e7f7ec;
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+  margin: 1rem 0;
+  font-size: 0.92rem;
+}
+.wa-confirm p { margin-bottom: 0.75rem; }
+.btn-whatsapp { background: #25d366; border-color: #25d366; color: #fff; }
+.btn-whatsapp:hover { background: #1da851; border-color: #1da851; }
 
 /* ===== Admin page ===== */
 .admin { max-width: 980px; }
@@ -650,6 +660,7 @@ body.has-cookie-banner .whatsapp-float { bottom: 120px; }
 .btn-ghost-dark { background: transparent; color: var(--red); border-color: #e3c4bf; }
 .btn-ghost-dark:hover { background: #f3dcd8; border-color: var(--red); }
 .admin-empty { color: var(--muted); font-size: 0.9rem; }
+.admin-cal { display: block; font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
 .admin-scroll { overflow-x: auto; }
 
 .booking-foot {
