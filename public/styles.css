@@ -404,7 +404,6 @@ button { font: inherit; color: inherit; }
 .footer-grid h4 { color: var(--cream); font-size: 0.95rem; margin-bottom: 0.6rem; }
 .footer-grid p { margin-bottom: 0.6rem; }
 .footer-grid .logo { display: inline-block; margin-bottom: 0.8rem; }
-.fresha-link { color: var(--brass); font-weight: 600; }
 .footer-bottom {
   display: flex;
   justify-content: space-between;
@@ -536,6 +535,34 @@ body.has-cookie-banner .whatsapp-float { bottom: 120px; }
 }
 .time-btn:hover { border-color: #cdbd9f; }
 .time-btn[aria-selected="true"] { background: var(--brass); border-color: var(--brass); color: #fff; }
+/* Booked times: grey, crossed out and not clickable */
+.time-btn.taken,
+.time-btn:disabled {
+  background: #eeebe5;
+  border-color: #e2ddd3;
+  color: #a39d93;
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+.date-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.slot-legend {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 0.75rem;
+}
+.slot-legend span {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  display: inline-block;
+}
+.slot-legend span + * { margin-right: 0.6rem; }
+.legend-free { background: #fff; border: 1.5px solid var(--line); }
+.legend-taken { background: #eeebe5; border: 1.5px solid #e2ddd3; margin-left: 0.6rem; }
 
 .summary {
   background: #fff;
@@ -583,19 +610,47 @@ body.has-cookie-banner .whatsapp-float { bottom: 120px; }
 .choice[aria-pressed="true"] .choice-check { background: var(--brass); border-color: var(--brass); }
 .choice[aria-pressed="true"] .choice-check::after { content: "✓"; }
 
-.handoff {
-  background: var(--cream);
-  border-radius: var(--radius);
-  padding: 1.1rem 1.25rem;
-  margin-bottom: 1.25rem;
+.booking-form .btn:disabled { opacity: 0.6; cursor: progress; }
+
+.done { text-align: center; padding: 1.5rem 0; }
+.done-icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 1.25rem;
+  border-radius: 50%;
+  background: #d9efe1;
+  color: var(--green);
+  display: grid;
+  place-items: center;
+  font-size: 2rem;
 }
-.handoff h3 { font-family: "Inter", system-ui, sans-serif; font-size: 1rem; margin-bottom: 0.4rem; }
-.handoff p { font-size: 0.92rem; color: var(--muted); }
-.handoff p + p { margin-top: 0.5rem; }
-.handoff-note { font-weight: 500; color: var(--text) !important; }
-.handoff-status { font-size: 0.9rem; margin: 0.9rem 0; color: var(--green); min-height: 1.2em; }
-.btn[aria-disabled="true"] { opacity: 0.6; cursor: progress; }
-.center { text-align: center; }
+.done-lead { font-weight: 600; font-size: 1.05rem; margin-bottom: 1rem; }
+.done-details { text-align: left; margin-bottom: 1.5rem; }
+.done-details .muted { text-align: center; }
+
+/* ===== Admin page ===== */
+.admin { max-width: 980px; }
+.admin-login { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: end; margin-bottom: 1.5rem; }
+.admin-login label { display: grid; gap: 0.35rem; font-weight: 500; font-size: 0.9rem; flex: 1 1 240px; }
+.admin-login input {
+  font: inherit;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid #d9d0c1;
+  border-radius: 8px;
+  background: #fff;
+}
+.admin-toolbar { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }
+.admin-day { margin-bottom: 1.75rem; }
+.admin-day h3 { font-family: "Inter", system-ui, sans-serif; font-size: 1rem; margin-bottom: 0.5rem; }
+.admin-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: var(--radius); overflow: hidden; font-size: 0.92rem; }
+.admin-table th, .admin-table td { padding: 0.65rem 0.75rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.admin-table th { background: var(--cream); font-weight: 600; }
+.admin-table tr.cancelled td { color: #a39d93; text-decoration: line-through; }
+.admin-table .btn { white-space: nowrap; }
+.btn-ghost-dark { background: transparent; color: var(--red); border-color: #e3c4bf; }
+.btn-ghost-dark:hover { background: #f3dcd8; border-color: var(--red); }
+.admin-empty { color: var(--muted); font-size: 0.9rem; }
+.admin-scroll { overflow-x: auto; }
 
 .booking-foot {
   border-top: 1px solid var(--line);

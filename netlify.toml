@@ -1,4 +1,12 @@
-# Netlify settings. The site is plain HTML, so there is no build step:
-# the project folder is published as-is. Security headers live in _headers.
+# Netlify settings. The website is plain HTML in public/ (no build step).
+# Booking server code lives in netlify/functions and is never published as a file.
 [build]
-  publish = "."
+  publish = "public"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[dev]
+  publish = "public"
+  port = 8888

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en-ZA">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Bookings | Chaps &amp; Co Staff</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="./" class="logo">Chaps <span>&amp;</span> Co</a>
+      <span class="muted small">Staff bookings</span>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container admin">
+      <h1>Bookings</h1>
+
+      <form class="admin-login" id="admin-login">
+        <label>Admin password
+          <input type="password" name="key" autocomplete="current-password" required>
+        </label>
+        <button type="submit" class="btn">Show bookings</button>
+      </form>
+
+      <div id="admin-area" hidden>
+        <div class="admin-toolbar">
+          <button type="button" class="btn btn-small" id="admin-refresh">Refresh</button>
+          <button type="button" class="link-button" id="admin-signout">Sign out</button>
+          <span class="muted small" id="admin-updated"></span>
+        </div>
+        <div id="admin-days"></div>
+      </div>
+      <p class="form-message" id="admin-message" role="alert"></p>
+    </div>
+  </main>
+
+  <script type="module" src="admin.js"></script>
+</body>
+</html>

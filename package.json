@@ -1,0 +1,9 @@
+{
+  "name": "chaps-and-co",
+  "private": true,
+  "type": "module",
+  "description": "Chaps & Co Barbers website with its own booking system (Netlify Functions + Netlify Blobs)",
+  "dependencies": {
+    "@netlify/blobs": "^11.1.7"
+  }
+}
