@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en-ZA">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; frame-src https://www.google.com https://maps.google.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>Trading Hours | Chaps &amp; Co Barbers, Raslouw</title>
+  <meta name="description" content="Chaps & Co Barbers trading hours: Monday 09:00–19:00, Tuesday to Sunday 08:00–19:30. Jewel Beetle Street, Raslouw, City of Tshwane.">
+  <meta name="theme-color" content="#1c1b19">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <!-- Header / navigation -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="./" class="logo">Chaps <span>&amp;</span> Co</a>
+      <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="site-nav">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="site-nav" id="site-nav" aria-label="Main">
+        <a href="services.html">Services</a>
+        <a href="./#team">Team</a>
+        <a href="./#gallery">Gallery</a>
+        <a href="hours.html" aria-current="page">Trading Hours</a>
+        <a href="./#visit">Visit</a>
+        <a href="./#faq">FAQ</a>
+        <button type="button" class="btn btn-small" data-book>Book now</button>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- Banner -->
+    <section class="page-hero page-hero-hours">
+      <div class="container">
+        <p class="eyebrow">Open 7 days a week</p>
+        <h1>Trading Hours</h1>
+        <p>Walk in when a chair is free, or book ahead to secure your time.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container hours-page">
+        <div class="hours-card">
+          <h2 class="hours-title">This week <span class="open-badge" data-open-badge></span></h2>
+          <table class="hours" data-hours-table>
+            <caption class="visually-hidden">Trading hours by day</caption>
+            <thead class="visually-hidden">
+              <tr><th scope="col">Day</th><th scope="col">Hours</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <p class="hours-note">All times are South African Standard Time (SAST). Today is highlighted.</p>
+        </div>
+
+        <aside class="info-card">
+          <h3>Find us</h3>
+          <address class="address">
+            Chaps &amp; Co Barbers<br>
+            Jewel Beetle Street, Raslouw<br>
+            City of Tshwane, 0157
+          </address>
+          <ul class="contact-list">
+            <li><a href="tel:+27711591026">071 159 1026</a></li>
+            <li><a href="https://www.google.com/maps/dir/?api=1&amp;destination=-25.855316,28.110067" target="_blank" rel="noopener noreferrer">Get directions</a></li>
+          </ul>
+          <button type="button" class="btn btn-block" data-book>Book an appointment</button>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <span class="logo">Chaps <span>&amp;</span> Co</span>
+        <p>Jewel Beetle Street, Raslouw<br>City of Tshwane, 0157</p>
+        <p><a href="tel:+27711591026">071 159 1026</a></p>
+      </div>
+      <div>
+        <h4>Hours</h4>
+        <p>Monday: 09:00 – 19:00<br>Tuesday – Sunday: 08:00 – 19:30</p>
+        <p><a href="hours.html">Trading hours</a> &middot; <a href="services.html">Services</a></p>
+      </div>
+      <div>
+        <h4>More information</h4>
+        <p>See reviews, more photos and book instantly on our Fresha page:</p>
+        <a class="fresha-link" href="https://www.fresha.com/en-GB/a/chaps-and-co-raslouw-pretoria-chaps-co-barbers-jewel-beetle-street-giv79nqi" target="_blank" rel="noopener noreferrer">Chaps &amp; Co on Fresha &rarr;</a>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <p>&copy; <span data-year></span> Chaps &amp; Co Barbers. All rights reserved.</p>
+      <p><a href="privacy.html">Privacy &amp; cookies</a> &middot; <button type="button" class="link-button" id="cookie-settings">Cookie settings</button></p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

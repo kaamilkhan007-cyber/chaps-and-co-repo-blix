@@ -3,11 +3,17 @@
 // ===== Business details: edit these to update the whole site =====
 const SHOP = {
   whatsapp: "27711591026", // international format, digits only
+  timeZone: "Africa/Johannesburg",
+  // Official Fresha booking page. Fresha checks live availability and confirms every appointment.
   freshaBooking:
     "https://www.fresha.com/a/chaps-and-co-raslouw-pretoria-chaps-co-barbers-jewel-beetle-street-giv79nqi/booking",
   // Google Maps pin on Jewel Beetle Street, Raslouw (City of Tshwane, 0157)
   mapEmbed: "https://www.google.com/maps/embed?origin=mfe&pb=!1m3!2m1!1s-25.855316,28.110067!6i16",
 };
+
+// Service selected when the booking window opens. Fresha's public booking link only accepts a
+// service (offerItemId); professional, date and time are chosen on Fresha from its live calendar.
+const DEFAULT_SERVICE_ID = "s:11144372"; // Haircut
 
 // Trading hours. 0 = Sunday ... 6 = Saturday. [opens, closes] in 24-hour time, or null if closed.
 const HOURS = {
@@ -29,7 +35,7 @@ const CATEGORIES = [
   { id: "therapy", name: "Therapy" },
 ];
 
-// `id` is the service's Fresha ID, so "Book on Fresha" opens the same service there.
+// `id` is the service's Fresha ID, so booking opens the same service on Fresha.
 const SERVICES = [
   { id: "s:11144372", name: "Haircut", mins: 20, price: 160, cats: ["popular", "haircuts"] },
   { id: "s:11068040", name: "Haircut & Shave", mins: 60, price: 300, cats: ["popular", "haircuts", "beard"] },
@@ -47,14 +53,11 @@ const SERVICES = [
 ];
 
 const PROFESSIONALS = [
-  { id: "any", name: "Any professional", role: "Maximum availability" },
   { id: "mohammed", name: "Mohammed", role: "Owner", photo: "images/mohammed.jpg" },
   { id: "papu", name: "Papu", role: "Big Boss" },
   { id: "ahmad", name: "Ahmad", role: "Barber" },
 ];
 
-const SLOT_MINUTES = 15;
-const BOOKING_DAYS = 14;
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 // ===== Helpers =====
@@ -75,6 +78,7 @@ function el(tag, attrs = {}, children = []) {
   return node;
 }
 
+const $ = (selector) => document.querySelector(selector);
 const formatPrice = (rand) => `R${rand}`;
 
 function formatDuration(mins) {
@@ -88,18 +92,23 @@ const toMinutes = (hhmm) => {
   const [h, m] = hhmm.split(":").map(Number);
   return h * 60 + m;
 };
-const fromMinutes = (mins) =>
-  `${String(Math.floor(mins / 60)).padStart(2, "0")}:${String(mins % 60).padStart(2, "0")}`;
 
-function dateKey(date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+// Current day and time at the shop, whatever the visitor's own time zone is.
+function shopNow() {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: SHOP.timeZone,
+      weekday: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    })
+      .formatToParts(new Date())
+      .map((p) => [p.type, p.value])
+  );
+  const day = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(parts.weekday);
+  return { day, mins: Number(parts.hour) * 60 + Number(parts.minute) };
 }
-function dateFromKey(key) {
-  const [y, m, d] = key.split("-").map(Number);
-  return new Date(y, m - 1, d);
-}
-const longDate = (date) =>
-  date.toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "long" });
 
 const whatsappLink = (text) => `https://wa.me/${SHOP.whatsapp}?text=${encodeURIComponent(text)}`;
 const freshaLink = (service) =>
@@ -111,11 +120,10 @@ function avatarFor(pro) {
   if (pro.photo) {
     return el("div", { class: "avatar" }, el("img", { src: pro.photo, alt: "", width: 96, height: 96, loading: "lazy" }));
   }
-  if (pro.id === "any") return el("div", { class: "avatar avatar-any", "aria-hidden": "true", text: "★" });
   return el("div", { class: "avatar", "aria-hidden": "true", text: pro.name.charAt(0) });
 }
 
-// Accessible tab bar. Calls onSelect(categoryId) when the active tab changes.
+// Accessible tab bar. Calls onSelect(categoryId, tabId) when the active tab changes.
 function buildTabs(tablist, idPrefix, onSelect) {
   const tabs = CATEGORIES.filter((c) => servicesIn(c.id).length).map((cat) =>
     el("button", {
@@ -156,269 +164,284 @@ function buildTabs(tablist, idPrefix, onSelect) {
   return { select: (catId) => select(tabs.find((t) => t.dataset.cat === catId) || tabs[0], false) };
 }
 
-// ===== Mobile menu =====
-const navToggle = document.querySelector(".nav-toggle");
-const nav = document.getElementById("site-nav");
+// ===== Navigation =====
+const navToggle = $(".nav-toggle");
+const nav = $("#site-nav");
 
 function setMenu(open) {
   nav.classList.toggle("open", open);
   navToggle.setAttribute("aria-expanded", open);
   navToggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
 }
-navToggle.addEventListener("click", () => setMenu(!nav.classList.contains("open")));
-nav.addEventListener("click", (event) => {
-  if (event.target.closest("a, button")) setMenu(false);
+if (nav && navToggle) {
+  navToggle.addEventListener("click", () => setMenu(!nav.classList.contains("open")));
+  nav.addEventListener("click", (event) => {
+    if (event.target.closest("a, button")) setMenu(false);
+  });
+}
+
+// Highlight the current page, or on the home page the section on screen
+const page = location.pathname.split("/").pop() || "index.html";
+const navLinks = nav ? [...nav.querySelectorAll("a")] : [];
+navLinks.forEach((link) => {
+  const target = link.getAttribute("href");
+  if (!target.includes("#") && target === page) link.classList.add("active");
 });
 
-// Highlight the menu link for the section currently on screen
-const navLinks = [...nav.querySelectorAll('a[href^="#"]')];
-const navSections = navLinks.map((link) => document.querySelector(link.getAttribute("href")));
+const sectionLinks = navLinks.filter((link) => {
+  const hash = link.getAttribute("href").split("#")[1];
+  return hash && document.getElementById(hash);
+});
+const navSections = sectionLinks.map((link) => document.getElementById(link.getAttribute("href").split("#")[1]));
 
 function updateActiveLink() {
   const atBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 2;
   let current = atBottom ? navSections.length - 1 : -1;
   if (!atBottom) {
     navSections.forEach((section, i) => {
-      if (section && section.getBoundingClientRect().top <= window.innerHeight / 3) current = i;
+      if (section.getBoundingClientRect().top <= window.innerHeight / 3) current = i;
     });
   }
-  navLinks.forEach((link, i) => link.classList.toggle("active", i === current));
+  sectionLinks.forEach((link, i) => link.classList.toggle("active", i === current));
 }
-window.addEventListener("scroll", updateActiveLink, { passive: true });
-updateActiveLink();
+if (sectionLinks.length) {
+  window.addEventListener("scroll", updateActiveLink, { passive: true });
+  updateActiveLink();
+}
 
-// ===== Services section with tabs =====
-const servicePanel = el("div", { class: "services-grid", role: "tabpanel", tabindex: "0" });
-document.getElementById("service-panels").append(servicePanel);
+// ===== Services page: tabs and price cards =====
+const serviceTabList = $("#service-tabs");
+if (serviceTabList) {
+  const servicePanel = el("div", { class: "services-grid", role: "tabpanel", tabindex: "0" });
+  $("#service-panels").append(servicePanel);
 
-const serviceTabs = buildTabs(document.getElementById("service-tabs"), "services", (catId, tabId) => {
-  servicePanel.setAttribute("aria-labelledby", tabId);
-  servicePanel.replaceChildren(
-    ...servicesIn(catId).map((service) =>
-      el("article", { class: "service" }, [
-        el("div", {}, [
-          el("h3", { text: service.name }),
-          el("span", { class: "meta", text: formatDuration(service.mins) }),
-          el("span", { class: "price", text: formatPrice(service.price) }),
-        ]),
+  buildTabs(serviceTabList, "services", (catId, tabId) => {
+    servicePanel.setAttribute("aria-labelledby", tabId);
+    servicePanel.replaceChildren(
+      ...servicesIn(catId).map((service) =>
+        el("article", { class: "service" }, [
+          el("div", {}, [
+            el("h3", { text: service.name }),
+            el("span", { class: "meta", text: formatDuration(service.mins) }),
+            el("span", { class: "price", text: formatPrice(service.price) }),
+          ]),
+          el("button", {
+            type: "button",
+            class: "btn btn-small",
+            text: "Book",
+            "aria-label": `Book ${service.name}`,
+            onclick: () => openBooking({ service, skipToReview: true }),
+          }),
+        ])
+      )
+    );
+  }).select("popular");
+}
+
+// ===== Team =====
+const teamGrid = $("#team-grid");
+if (teamGrid) {
+  teamGrid.replaceChildren(
+    ...PROFESSIONALS.map((pro) =>
+      el("article", { class: "barber" }, [
+        avatarFor(pro),
+        el("h3", { text: pro.name }),
+        el("p", { text: pro.role }),
         el("button", {
           type: "button",
           class: "btn btn-small",
-          text: "Book",
-          "aria-label": `Book ${service.name}`,
-          onclick: () => openBooking({ service }),
+          text: `Book with ${pro.name}`,
+          onclick: () => openBooking({ pro }),
         }),
       ])
     )
   );
-});
-serviceTabs.select("popular");
+}
 
-// ===== Team =====
-document.getElementById("team-grid").replaceChildren(
-  ...PROFESSIONALS.filter((p) => p.id !== "any").map((pro) =>
-    el("article", { class: "barber" }, [
-      avatarFor(pro),
-      el("h3", { text: pro.name }),
-      el("p", { text: pro.role }),
-      el("button", {
-        type: "button",
-        class: "btn btn-small",
-        text: `Book with ${pro.name}`,
-        onclick: () => openBooking({ pro }),
-      }),
-    ])
-  )
-);
+// ===== Booking window =====
+// The site helps customers pick a service, then hands over to Fresha's official booking page,
+// where they choose a professional, date and time from live availability and Fresha confirms.
+// Nothing is booked or stored on this website.
+let bookingUI = null;
+const booking = { service: null, pro: null, history: [] };
 
-// ===== Booking flow =====
-const dialog = document.getElementById("booking");
+function createBookingUI() {
+  const serviceList = el("div", { class: "choice-list" });
+  const tabList = el("div", { class: "tabs tabs-small", role: "tablist", "aria-label": "Service categories" });
+  const summary = el("dl", { class: "summary" });
+  const proNote = el("p", { class: "handoff-note" });
+  const handoffStatus = el("p", { class: "handoff-status", role: "status" });
+  const footTotal = el("div", { class: "booking-total" });
+  const continueBtn = el("button", { type: "button", class: "btn", text: "Continue", onclick: () => goTo("review") });
+  const freshaBtn = el("a", {
+    class: "btn btn-block",
+    target: "_blank",
+    rel: "noopener noreferrer",
+    text: "Continue to Fresha",
+  });
+
+  // Ignore repeat taps for a moment so customers don't open several booking tabs
+  let opening = false;
+  freshaBtn.addEventListener("click", (event) => {
+    if (opening) {
+      event.preventDefault();
+      return;
+    }
+    opening = true;
+    freshaBtn.setAttribute("aria-disabled", "true");
+    handoffStatus.textContent =
+      "Fresha has opened in a new tab. Choose your professional, date and time there. Your booking is only confirmed once Fresha shows its confirmation.";
+    setTimeout(() => {
+      opening = false;
+      freshaBtn.removeAttribute("aria-disabled");
+    }, 3000);
+  });
+
+  const title = el("h2", { id: "booking-title" });
+  const stepLabel = el("p", { class: "booking-step-label" });
+  const progress = el("span");
+  const backBtn = el("button", { type: "button", class: "icon-btn", "aria-label": "Go back", text: "←", onclick: goBack });
+  const closeBtn = el("button", {
+    type: "button",
+    class: "icon-btn",
+    "aria-label": "Close booking",
+    text: "×",
+    onclick: closeBooking,
+  });
+
+  const steps = {
+    service: el("div", { class: "step", "data-step": "service" }, [tabList, serviceList]),
+    review: el("div", { class: "step", "data-step": "review" }, [
+      summary,
+      el("div", { class: "handoff" }, [
+        el("h3", { text: "Live availability on Fresha" }),
+        el("p", {
+          text: "We take bookings through Fresha, our booking provider. On the next screen you'll see the times that are actually free, choose your professional, date and time, and Fresha will confirm your appointment.",
+        }),
+        proNote,
+      ]),
+      freshaBtn,
+      handoffStatus,
+      el("p", { class: "muted small center" }, [
+        "Questions first? ",
+        el("a", {
+          href: whatsappLink("Hi Chaps & Co, I have a question about booking."),
+          target: "_blank",
+          rel: "noopener noreferrer",
+          text: "WhatsApp us",
+        }),
+        " or call ",
+        el("a", { href: "tel:+27711591026", text: "071 159 1026" }),
+        ".",
+      ]),
+    ]),
+  };
+  const foot = el("div", { class: "booking-foot" }, [footTotal, continueBtn]);
+
+  const dialog = el("dialog", { class: "booking", "aria-labelledby": "booking-title" }, [
+    el("div", { class: "booking-head" }, [
+      backBtn,
+      el("div", { class: "booking-progress", "aria-hidden": "true" }, progress),
+      closeBtn,
+    ]),
+    stepLabel,
+    title,
+    el("div", { class: "booking-body" }, Object.values(steps)),
+    foot,
+  ]);
+
+  // Escape key
+  dialog.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    closeBooking();
+  });
+  dialog.addEventListener("close", () => document.documentElement.classList.remove("no-scroll"));
+  // Close when clicking the dark backdrop outside the window
+  dialog.addEventListener("click", (event) => {
+    if (event.target !== dialog) return;
+    const r = dialog.getBoundingClientRect();
+    const inside = event.clientX >= r.left && event.clientX <= r.right && event.clientY >= r.top && event.clientY <= r.bottom;
+    if (!inside) closeBooking();
+  });
+
+  document.body.append(dialog);
+
+  const tabs = buildTabs(tabList, "booking", (catId) => {
+    serviceList.replaceChildren(
+      ...servicesIn(catId).map((service) =>
+        el(
+          "button",
+          {
+            type: "button",
+            class: "choice",
+            "aria-pressed": booking.service === service,
+            onclick: (event) => {
+              booking.service = service;
+              serviceList
+                .querySelectorAll(".choice")
+                .forEach((c) => c.setAttribute("aria-pressed", c === event.currentTarget));
+              updateFoot();
+            },
+          },
+          [
+            el("span", { class: "choice-main" }, [
+              el("span", { class: "choice-title", text: service.name }),
+              el("span", { class: "choice-sub", text: formatDuration(service.mins) }),
+            ]),
+            el("span", { class: "choice-price", text: formatPrice(service.price) }),
+            el("span", { class: "choice-check", "aria-hidden": "true" }),
+          ]
+        )
+      )
+    );
+  });
+
+  function updateFoot() {
+    const { service } = booking;
+    footTotal.textContent = service ? `${service.name} · ${formatPrice(service.price)} · ${formatDuration(service.mins)}` : "";
+    continueBtn.disabled = !service;
+  }
+
+  return { dialog, steps, tabs, summary, proNote, handoffStatus, freshaBtn, title, stepLabel, progress, backBtn, foot, updateFoot };
+}
+
 const STEPS = {
-  service: { label: "Step 1 of 4", title: "Select a service", progress: 25 },
-  professional: { label: "Step 2 of 4", title: "Select a professional", progress: 50 },
-  time: { label: "Step 3 of 4", title: "Select a date & time", progress: 75 },
-  details: { label: "Step 4 of 4", title: "Confirm your booking", progress: 100 },
-  done: { label: "All set", title: "Your booking is ready to send", progress: 100 },
+  service: { label: "Step 1 of 2", title: "Select a service", progress: 50 },
+  review: { label: "Step 2 of 2", title: "Review and continue", progress: 100 },
 };
 
-const booking = { service: null, pro: null, proLocked: false, date: null, time: null, history: [] };
-
-const bookingTabs = buildTabs(document.getElementById("booking-tabs"), "booking", (catId) => {
-  const list = document.getElementById("booking-services");
-  list.replaceChildren(
-    ...servicesIn(catId).map((service) =>
-      el(
-        "button",
-        {
-          type: "button",
-          class: "choice",
-          "aria-pressed": booking.service === service,
-          onclick: () => {
-            booking.service = service;
-            if (!servicesFit(booking.date)) booking.date = null;
-            goTo(booking.proLocked ? "time" : "professional");
-          },
-        },
-        [
-          el("span", { class: "choice-main" }, [
-            el("span", { class: "choice-title", text: service.name }),
-            el("span", { class: "choice-sub", text: formatDuration(service.mins) }),
-          ]),
-          el("span", { class: "choice-price", text: formatPrice(service.price) }),
-        ]
-      )
-    )
-  );
-});
-
-function renderProfessionals() {
-  document.getElementById("booking-pros").replaceChildren(
-    ...PROFESSIONALS.map((pro) =>
-      el(
-        "button",
-        {
-          type: "button",
-          class: "choice",
-          "aria-pressed": booking.pro === pro,
-          onclick: () => {
-            booking.pro = pro;
-            goTo("time");
-          },
-        },
-        [
-          avatarFor(pro),
-          el("span", { class: "choice-main" }, [
-            el("span", { class: "choice-title", text: pro.name }),
-            el("span", { class: "choice-sub", text: pro.role }),
-          ]),
-        ]
-      )
-    )
-  );
-}
-
-// Start times on a given day that leave room for the whole service before closing.
-function slotsFor(key) {
-  if (!key || !booking.service) return [];
-  const date = dateFromKey(key);
-  const hours = HOURS[date.getDay()];
-  if (!hours) return [];
-
-  let start = toMinutes(hours[0]);
-  const lastStart = toMinutes(hours[1]) - booking.service.mins;
-
-  if (key === dateKey(new Date())) {
-    // Today: only offer times at least 30 minutes from now
-    const now = new Date();
-    const earliest = now.getHours() * 60 + now.getMinutes() + 30;
-    start = Math.max(start, Math.ceil(earliest / SLOT_MINUTES) * SLOT_MINUTES);
-  }
-
-  const slots = [];
-  for (let t = start; t <= lastStart; t += SLOT_MINUTES) slots.push(fromMinutes(t));
-  return slots;
-}
-const servicesFit = (key) => slotsFor(key).length > 0;
-
-function renderTimes() {
-  const dates = [];
-  const today = new Date();
-  for (let i = 0; i < BOOKING_DAYS; i++) {
-    dates.push(new Date(today.getFullYear(), today.getMonth(), today.getDate() + i));
-  }
-  if (!booking.date) {
-    const firstOpen = dates.find((d) => servicesFit(dateKey(d)));
-    booking.date = firstOpen ? dateKey(firstOpen) : dateKey(today);
-  }
-
-  document.getElementById("booking-dates").replaceChildren(
-    ...dates.map((date, i) => {
-      const key = dateKey(date);
-      return el(
-        "button",
-        {
-          type: "button",
-          class: "date-btn",
-          role: "option",
-          "aria-selected": key === booking.date,
-          "aria-label": longDate(date),
-          onclick: () => {
-            booking.date = key;
-            booking.time = null;
-            renderTimes();
-          },
-        },
-        [
-          el("span", { text: i === 0 ? "Today" : DAY_NAMES[date.getDay()].slice(0, 3) }),
-          el("strong", { text: date.getDate() }),
-          el("span", { text: date.toLocaleDateString("en-ZA", { month: "short" }) }),
-        ]
-      );
-    })
-  );
-  document.querySelector('.date-btn[aria-selected="true"]')?.scrollIntoView({ block: "nearest", inline: "nearest" });
-
-  const slots = slotsFor(booking.date);
-  document.getElementById("booking-no-times").hidden = slots.length > 0;
-  document.getElementById("booking-times").replaceChildren(
-    ...slots.map((time) =>
-      el("button", {
-        type: "button",
-        class: "time-btn",
-        role: "option",
-        "aria-selected": time === booking.time,
-        text: time,
-        onclick: () => {
-          booking.time = time;
-          goTo("details");
-        },
-      })
-    )
-  );
-}
-
-function renderSummary() {
-  const { service, pro, date, time } = booking;
-  const end = fromMinutes(toMinutes(time) + service.mins);
-  const rows = [
-    ["Service", service.name],
-    ["Professional", pro.name],
-    ["Date", longDate(dateFromKey(date))],
-    ["Time", `${time} – ${end}`],
-    ["Duration", formatDuration(service.mins)],
-    ["Total", formatPrice(service.price)],
-  ];
-  document.getElementById("booking-summary").replaceChildren(
-    ...rows.flatMap(([label, value]) => {
-      const cls = label === "Total" ? "total" : undefined;
-      return [el("dt", { class: cls, text: label }), el("dd", { class: cls, text: value })];
-    })
-  );
-}
-
 function showStep(step) {
+  const ui = bookingUI;
   const info = STEPS[step];
-  dialog.querySelectorAll(".step").forEach((s) => (s.hidden = s.dataset.step !== step));
-  document.getElementById("booking-step-label").textContent = info.label;
-  document.getElementById("booking-title").textContent = info.title;
-  document.getElementById("booking-progress-bar").style.width = `${info.progress}%`;
-  document.getElementById("booking-back").disabled = booking.history.length <= 1 || step === "done";
-  document.getElementById("booking-foot").hidden = step === "done";
-
-  const { service } = booking;
-  document.getElementById("booking-total").textContent = service
-    ? `${service.name} · ${formatPrice(service.price)} · ${formatDuration(service.mins)}`
-    : "";
-  document.getElementById("booking-fresha").href = freshaLink(service);
+  Object.entries(ui.steps).forEach(([name, node]) => (node.hidden = name !== step));
+  ui.stepLabel.textContent = info.label;
+  ui.title.textContent = info.title;
+  ui.progress.style.width = `${info.progress}%`;
+  ui.backBtn.disabled = booking.history.length <= 1;
+  ui.foot.hidden = step !== "service";
 
   if (step === "service") {
-    bookingTabs.select(service ? service.cats[0] : "popular");
+    ui.tabs.select(booking.service ? booking.service.cats[0] : "popular");
+    ui.updateFoot();
   }
-  if (step === "professional") renderProfessionals();
-  if (step === "time") renderTimes();
-  if (step === "details") renderSummary();
 
-  dialog.querySelector(".booking-body").scrollTop = 0;
+  if (step === "review") {
+    const { service, pro } = booking;
+    ui.summary.replaceChildren(
+      ...[
+        ["Service", service.name],
+        ["Duration", formatDuration(service.mins)],
+        ["Price", formatPrice(service.price)],
+      ].flatMap(([label, value]) => [el("dt", { text: label }), el("dd", { text: value })])
+    );
+    ui.proNote.textContent = pro
+      ? `When Fresha asks you to select a professional, choose ${pro.name}.`
+      : "You can choose a specific professional, or any professional for the most availability.";
+    ui.freshaBtn.href = freshaLink(service);
+    ui.handoffStatus.textContent = "";
+  }
+
+  ui.dialog.querySelector(".booking-body").scrollTop = 0;
 }
 
 function goTo(step) {
@@ -432,120 +455,50 @@ function goBack() {
   showStep(booking.history[booking.history.length - 1]);
 }
 
-function openBooking({ service = null, pro = null } = {}) {
-  Object.assign(booking, {
-    service,
-    pro,
-    proLocked: Boolean(pro),
-    date: null,
-    time: null,
-    history: [],
-  });
-  bookingForm.reset();
-  bookingForm.querySelectorAll(".invalid").forEach((f) => f.classList.remove("invalid"));
-  bookingMessage.textContent = "";
+function openBooking({ service = null, pro = null, skipToReview = false } = {}) {
+  if (!bookingUI) bookingUI = createBookingUI();
+  booking.service = service || SERVICES.find((s) => s.id === DEFAULT_SERVICE_ID) || null;
+  booking.pro = pro;
+  booking.history = [];
 
-  // Booking a service goes straight to choosing a professional (Back still returns to the service list)
-  if (service) booking.history.push("service");
-  goTo(service ? "professional" : "service");
-  dialog.showModal();
+  if (skipToReview) {
+    booking.history.push("service");
+    goTo("review");
+  } else {
+    goTo("service");
+  }
+  bookingUI.dialog.showModal();
   document.documentElement.classList.add("no-scroll");
 }
 
-document.querySelectorAll("[data-book]").forEach((button) =>
-  button.addEventListener("click", () => openBooking())
-);
 function closeBooking() {
-  if (dialog.open) dialog.close();
+  if (bookingUI.dialog.open) bookingUI.dialog.close();
   document.documentElement.classList.remove("no-scroll");
 }
 
-document.getElementById("booking-back").addEventListener("click", goBack);
-document.getElementById("booking-close").addEventListener("click", closeBooking);
-document.getElementById("booking-finish").addEventListener("click", closeBooking);
-// Escape key
-dialog.addEventListener("cancel", (event) => {
-  event.preventDefault();
-  closeBooking();
-});
-dialog.addEventListener("close", () => document.documentElement.classList.remove("no-scroll"));
-// Close when clicking the dark backdrop outside the dialog
-dialog.addEventListener("click", (event) => {
-  if (event.target !== dialog) return;
-  const r = dialog.getBoundingClientRect();
-  const inside = event.clientX >= r.left && event.clientX <= r.right && event.clientY >= r.top && event.clientY <= r.bottom;
-  if (!inside) closeBooking();
-});
+document.querySelectorAll("[data-book]").forEach((button) => button.addEventListener("click", () => openBooking()));
 
-// Details form: validate, then open WhatsApp with the booking filled in
-const bookingForm = document.getElementById("booking-form");
-const bookingMessage = document.getElementById("booking-message");
-
-bookingForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-
-  const name = bookingForm.elements.name.value.trim().replace(/\s+/g, " ");
-  const phone = bookingForm.elements.phone.value.trim();
-  const note = bookingForm.elements.note.value.trim();
-  const nameOk = name.length >= 2;
-  const phoneOk = /^[0-9 +()-]{9,20}$/.test(phone) && phone.replace(/\D/g, "").length >= 9;
-
-  bookingForm.elements.name.classList.toggle("invalid", !nameOk);
-  bookingForm.elements.phone.classList.toggle("invalid", !phoneOk);
-  if (!nameOk || !phoneOk) {
-    bookingMessage.textContent = !nameOk ? "Please enter your name." : "Please enter a valid phone number.";
-    (!nameOk ? bookingForm.elements.name : bookingForm.elements.phone).focus();
-    return;
-  }
-  bookingMessage.textContent = "";
-
-  const { service, pro, date, time } = booking;
-  const lines = [
-    "Hi Chaps & Co, I'd like to book an appointment:",
-    "",
-    `Service: ${service.name} (${formatPrice(service.price)}, ${formatDuration(service.mins)})`,
-    `Professional: ${pro.name}`,
-    `Date: ${longDate(dateFromKey(date))}`,
-    `Time: ${time}`,
-    "",
-    `Name: ${name}`,
-    `Phone: ${phone}`,
-  ];
-  if (note) lines.push(`Note: ${note}`);
-  const link = whatsappLink(lines.join("\n"));
-
-  window.open(link, "_blank", "noopener");
-
-  const doneText = document.getElementById("booking-done-text");
-  doneText.replaceChildren(
-    `Thanks ${name.split(" ")[0]}! WhatsApp has opened with your booking for ${service.name} on ${longDate(
-      dateFromKey(date)
-    )} at ${time}. Press send and we'll confirm your appointment. `,
-    el("a", { href: link, target: "_blank", rel: "noopener noreferrer", text: "WhatsApp didn't open? Tap here." })
-  );
-  goTo("done");
-});
-
-// ===== Trading hours & open badge =====
-const hoursBody = document.querySelector("#hours-table tbody");
-[1, 2, 3, 4, 5, 6, 0].forEach((day) => {
-  const hours = HOURS[day];
-  hoursBody.append(
-    el("tr", { "data-day": day }, [
-      el("td", { text: DAY_NAMES[day] }),
-      el("td", { text: hours ? `${hours[0]} – ${hours[1]}` : "Closed" }),
-    ])
-  );
+// ===== Trading hours & open status (shop time, Africa/Johannesburg) =====
+document.querySelectorAll("[data-hours-table] tbody").forEach((body) => {
+  [1, 2, 3, 4, 5, 6, 0].forEach((day) => {
+    const hours = HOURS[day];
+    body.append(
+      el("tr", { "data-day": day }, [
+        el("td", { text: DAY_NAMES[day] }),
+        el("td", { text: hours ? `${hours[0]} – ${hours[1]}` : "Closed" }),
+      ])
+    );
+  });
 });
 
 function updateOpenStatus() {
-  const now = new Date();
-  const today = now.getDay();
-  const mins = now.getHours() * 60 + now.getMinutes();
+  const { day: today, mins } = shopNow();
   const hours = HOURS[today];
   const open = hours && mins >= toMinutes(hours[0]) && mins < toMinutes(hours[1]);
 
-  hoursBody.querySelectorAll("tr").forEach((row) => row.classList.toggle("today", Number(row.dataset.day) === today));
+  document
+    .querySelectorAll("[data-hours-table] tr[data-day]")
+    .forEach((row) => row.classList.toggle("today", Number(row.dataset.day) === today));
 
   let text = open ? `Open now · until ${hours[1]}` : "Closed now";
   if (!open) {
@@ -557,18 +510,20 @@ function updateOpenStatus() {
       break;
     }
   }
-  const badge = document.getElementById("open-badge");
-  badge.textContent = text;
-  badge.classList.toggle("is-open", Boolean(open));
+  document.querySelectorAll("[data-open-badge]").forEach((badge) => {
+    badge.textContent = text;
+    badge.classList.toggle("is-open", Boolean(open));
+  });
 }
-updateOpenStatus();
-setInterval(updateOpenStatus, 60 * 1000);
+if (document.querySelector("[data-open-badge], [data-hours-table]")) {
+  updateOpenStatus();
+  setInterval(updateOpenStatus, 60 * 1000);
+}
 
 // ===== Map & cookie consent =====
 const CONSENT_KEY = "chaps-cookie-consent";
-const mapWrap = document.getElementById("map-wrap");
-const mapPlaceholder = document.getElementById("map-placeholder");
-const cookieBanner = document.getElementById("cookie-banner");
+const mapWrap = $("#map-wrap");
+const mapPlaceholder = $("#map-placeholder");
 
 function readConsent() {
   try {
@@ -579,7 +534,7 @@ function readConsent() {
 }
 
 function loadMap() {
-  if (mapWrap.querySelector("iframe")) return;
+  if (!mapWrap || mapWrap.querySelector("iframe")) return;
   mapPlaceholder.hidden = true;
   mapWrap.append(
     el("iframe", {
@@ -593,9 +548,27 @@ function loadMap() {
 }
 
 function unloadMap() {
+  if (!mapWrap) return;
   mapWrap.querySelector("iframe")?.remove();
   mapPlaceholder.hidden = false;
 }
+
+const cookieBanner = el("div", { class: "cookie-banner", role: "region", "aria-label": "Cookie consent", hidden: true }, [
+  el("p", {}, [
+    "We only use essential browser storage to remember your choices. With your permission we also load Google Maps, which may set its own cookies. ",
+    el("a", { href: "privacy.html", text: "Learn more" }),
+  ]),
+  el("div", { class: "cookie-actions" }, [
+    el("button", {
+      type: "button",
+      class: "btn btn-small btn-ghost",
+      text: "Essential only",
+      onclick: () => saveConsent("essential"),
+    }),
+    el("button", { type: "button", class: "btn btn-small", text: "Accept all", onclick: () => saveConsent("all") }),
+  ]),
+]);
+document.body.append(cookieBanner);
 
 function setCookieBanner(visible) {
   cookieBanner.hidden = !visible;
@@ -612,15 +585,38 @@ function saveConsent(value) {
   setCookieBanner(false);
 }
 
-document.getElementById("cookie-accept").addEventListener("click", () => saveConsent("all"));
-document.getElementById("cookie-essential").addEventListener("click", () => saveConsent("essential"));
-document.getElementById("cookie-settings").addEventListener("click", () => setCookieBanner(true));
-document.getElementById("load-map").addEventListener("click", loadMap);
+$("#cookie-settings")?.addEventListener("click", () => setCookieBanner(true));
+$("#load-map")?.addEventListener("click", loadMap);
 
 const consent = readConsent();
 if (consent === "all") loadMap();
 if (!consent) setCookieBanner(true);
 
-// ===== Misc =====
-document.getElementById("whatsapp-float").href = whatsappLink("Hi Chaps & Co, ");
-document.getElementById("year").textContent = new Date().getFullYear();
+// ===== Floating WhatsApp button & footer year =====
+const waIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+waIcon.setAttribute("viewBox", "0 0 24 24");
+waIcon.setAttribute("width", "28");
+waIcon.setAttribute("height", "28");
+waIcon.setAttribute("aria-hidden", "true");
+const waPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+waPath.setAttribute("fill", "currentColor");
+waPath.setAttribute(
+  "d",
+  "M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.1 5.1 0 0 0 1.1 2.7 11.7 11.7 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2l-.5-.3Z"
+);
+waIcon.append(waPath);
+document.body.append(
+  el(
+    "a",
+    {
+      class: "whatsapp-float",
+      href: whatsappLink("Hi Chaps & Co, "),
+      target: "_blank",
+      rel: "noopener noreferrer",
+      "aria-label": "Chat with us on WhatsApp",
+    },
+    waIcon
+  )
+);
+
+document.querySelectorAll("[data-year]").forEach((node) => (node.textContent = new Date().getFullYear()));
