@@ -1,6 +1,7 @@
 // GET /api/admin/bookings?from=YYYY-MM-DD&days=14   (staff only)
 import { addDays, shopNow } from "../../public/shop-data.js";
 import { isAdmin, isDateKey, json, listDay } from "../lib/bookings.js";
+import { calendarConfigured } from "../lib/calendar.js";
 
 export default async (req) => {
   if (req.method !== "GET") return json(405, { error: "method_not_allowed" });
@@ -17,6 +18,7 @@ export default async (req) => {
     const lists = await Promise.all(dates.map((date) => listDay(date)));
     return json(200, {
       from,
+      calendar: calendarConfigured(),
       days: dates.map((date, i) => ({ date, bookings: lists[i].sort((a, b) => a.start - b.start) })),
     });
   } catch (error) {

@@ -68,7 +68,7 @@ const dayTitle = (dateKey) => {
   return dateKey === shopNow().dateKey ? `Today · ${label}` : label;
 };
 
-function renderDays(days) {
+function renderDays(days, calendarOn) {
   daysEl.replaceChildren(
     ...days.map(({ date, bookings }) => {
       const active = bookings.filter((b) => b.status !== "cancelled").length;
@@ -102,10 +102,12 @@ function renderDays(days) {
                       el("td", { text: b.note || "" }),
                       el("td", {}, [
                         b.ref,
-                        el("span", {
-                          class: "admin-cal",
-                          text: b.calendarEventId ? "In Google Calendar" : "Not in calendar",
-                        }),
+                        calendarOn
+                          ? el("span", {
+                              class: "admin-cal",
+                              text: b.calendarEventId ? "In Google Calendar" : "Not in calendar",
+                            })
+                          : null,
                       ]),
                       el(
                         "td",
@@ -137,7 +139,7 @@ async function loadBookings() {
     const data = await api(`/api/admin/bookings?from=${shopNow().dateKey}&days=14`);
     loginForm.hidden = true;
     area.hidden = false;
-    renderDays(data.days);
+    renderDays(data.days, data.calendar);
     updated.textContent = `Updated ${new Date().toLocaleTimeString("en-ZA", { hour: "2-digit", minute: "2-digit" })}`;
   } catch (error) {
     updated.textContent = "";

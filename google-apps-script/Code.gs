@@ -6,6 +6,7 @@
 //   3. Deploy > New deployment > Web app. Execute as: Me. Who has access: Anyone.
 //   4. Put the web app URL (ends in /exec) and SECRET in Netlify as
 //      GCAL_WEBHOOK_URL and GCAL_WEBHOOK_SECRET, then redeploy the site.
+//   5. Add a sentence to public/privacy.html saying bookings are copied to the shop's Google Calendar.
 //
 // Only requests that carry SECRET can create or delete events.
 
