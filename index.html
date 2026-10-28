@@ -24,6 +24,7 @@
         <a href="#about">About</a>
         <a href="#team">Barbers</a>
         <a href="#visit">Visit</a>
+        <a href="#faq">FAQ</a>
         <a href="#book" class="btn btn-small">Book now</a>
       </nav>
     </div>
@@ -132,7 +133,7 @@
         <div>
           <p class="eyebrow">Book a chair</p>
           <h2>Make an appointment</h2>
-          <p>Pick a service and a time that suits you and we'll confirm by phone or WhatsApp. Walk-ins are welcome when a chair is free.</p>
+          <p>Pick a service and a time that suits you. Your booking request opens in WhatsApp, ready to send, and we'll reply to confirm. Walk-ins are welcome when a chair is free.</p>
         </div>
         <form class="book-form" id="book-form" novalidate>
           <label>Name
@@ -160,7 +161,7 @@
               <input type="time" name="time" required min="09:00" max="18:00">
             </label>
           </div>
-          <button type="submit" class="btn">Request booking</button>
+          <button type="submit" class="btn">Send booking on WhatsApp</button>
           <p class="form-message" id="form-message" role="status"></p>
         </form>
       </div>
@@ -176,13 +177,45 @@
           <p><a href="tel:+27000000000">+27 00 000 0000</a><br><a href="mailto:hello@example.com">hello@example.com</a></p>
         </div>
         <div>
-          <h3>Opening hours</h3>
+          <h3>Opening hours <span class="open-badge" id="open-badge"></span></h3>
           <table class="hours">
             <tr><td>Monday – Friday</td><td>09:00 – 18:00</td></tr>
             <tr><td>Saturday</td><td>08:00 – 15:00</td></tr>
             <tr><td>Sunday</td><td>Closed</td></tr>
           </table>
         </div>
+      </div>
+      <div class="container">
+        <!-- Change the address after "q=" to your shop's address -->
+        <iframe class="map"
+          src="https://maps.google.com/maps?q=Cape+Town&z=14&output=embed"
+          title="Map showing the Chaps &amp; Co location"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"></iframe>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="section section-cream">
+      <div class="container faq-inner">
+        <p class="eyebrow">Good to know</p>
+        <h2>Questions</h2>
+        <details>
+          <summary>Do I need to book, or can I walk in?</summary>
+          <p>Both work. Booking guarantees your time, and walk-ins are welcome whenever a chair is free.</p>
+        </details>
+        <details>
+          <summary>How do I pay?</summary>
+          <p>We accept cash and card.</p>
+        </details>
+        <details>
+          <summary>What if I need to cancel?</summary>
+          <p>Just send us a WhatsApp message as early as you can so we can offer the slot to someone else.</p>
+        </details>
+        <details>
+          <summary>Do you cut kids' hair?</summary>
+          <p>Yes, our Kids Cut is for under-12s. A parent or guardian should stay in the shop.</p>
+        </details>
       </div>
     </section>
 
@@ -194,6 +227,10 @@
       <p>&copy; <span id="year"></span> Chaps &amp; Co. All rights reserved.</p>
     </div>
   </footer>
+
+  <a class="whatsapp-float" id="whatsapp-float" href="#" target="_blank" rel="noopener" aria-label="Chat with us on WhatsApp">
+    <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.1 5.1 0 0 0 1.1 2.7 11.7 11.7 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2l-.5-.3Z"/></svg>
+  </a>
 
   <script src="script.js"></script>
 </body>
