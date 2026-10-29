@@ -61,7 +61,50 @@ export const PROFESSIONALS = [
   { id: "ahmad", name: "Ahmad", role: "Barber" },
 ];
 
-export const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+// Laser hair removal by Metro Smooth at Chaps & Co (Raslouw Corner).
+// Booked directly with Metro Smooth, not through the barber booking system.
+export const LASER = {
+  provider: "Metro Smooth",
+  tagline: "Precision laser for men",
+  promise: "Discreet. Professional. Proven results.",
+  phoneDisplay: "060 786 6387",
+  phoneLink: "tel:+27607866387",
+  whatsapp: "27607866387",
+  instagram: "metrosmoooth",
+  treatments: [
+    { name: "Beard line", detail: "Above cheek line", price: 150 },
+    { name: "Neck", detail: "Around Adam's apple till beard", price: 100 },
+    { name: "Nape", detail: "Back of neck & hairline", price: 100 },
+    { name: "Ears", price: 150 },
+    { name: "Between brows", price: 80 },
+    { name: "Underarms", price: 250 },
+    { name: "Shoulders", price: 200 },
+    { name: "Half arms", price: 400 },
+    { name: "Full arms", price: 600 },
+    { name: "Fingers", price: 100 },
+    { name: "Chest", price: 350 },
+    { name: "Abdomen", price: 350 },
+    { name: "Belly line", detail: "Till above abdominal bone", price: 200 },
+    { name: "Upper back", price: 350 },
+    { name: "Lower back", price: 350 },
+    { name: "Full back", price: 600 },
+    { name: "Half leg", price: 500 },
+    { name: "Full leg", price: 900 },
+    { name: "Toes", price: 100 },
+  ],
+  combos: [
+    { name: "Metro Precision", detail: "Beard line, neck, nape & underarms", price: 450 },
+    { name: "Chest & abdomen", price: 600 },
+    { name: "Half arms, half leg & underarms", price: 900 },
+    { name: "Full legs & underarms", price: 900 },
+    { name: "Back, chest & underarms", price: 900 },
+    { name: "Full arms & full legs", price: 1200 },
+    { name: "Metro Sleek", detail: "Beard line, neck, nape, ears, underarms, shoulders, chest & full arms", price: 1200 },
+    { name: "Metro Platinum", detail: "Full body, excluding bikini & buttocks", price: 2000 },
+  ],
+};
+
+export const DAY_NAMES =["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 export const toMinutes = (hhmm) => {
   const [h, m] = hhmm.split(":").map(Number);

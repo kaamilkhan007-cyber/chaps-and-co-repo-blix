@@ -3,6 +3,7 @@ import {
   CATEGORIES,
   DAY_NAMES,
   HOURS,
+  LASER,
   PROFESSIONALS,
   SERVICES,
   SHOP,
@@ -60,8 +61,9 @@ function avatarFor(pro) {
 }
 
 // Accessible tab bar. Calls onSelect(categoryId, tabId) when the active tab changes.
-function buildTabs(tablist, idPrefix, onSelect) {
-  const tabs = CATEGORIES.filter((c) => servicesIn(c.id).length).map((cat) =>
+// `extraTabs` adds tabs that aren't barber services (e.g. laser on the Services page).
+function buildTabs(tablist, idPrefix, onSelect, extraTabs = []) {
+  const tabs = [...CATEGORIES.filter((c) => servicesIn(c.id).length), ...extraTabs].map((cat) =>
     el("button", {
       type: "button",
       class: "tab",
@@ -151,8 +153,14 @@ if (serviceTabList) {
   const servicePanel = el("div", { class: "services-grid", role: "tabpanel", tabindex: "0" });
   $("#service-panels").append(servicePanel);
 
-  buildTabs(serviceTabList, "services", (catId, tabId) => {
+  const tabs = buildTabs(serviceTabList, "services", (catId, tabId) => {
     servicePanel.setAttribute("aria-labelledby", tabId);
+    if (catId === "laser") {
+      servicePanel.className = "laser-panel";
+      servicePanel.replaceChildren(...laserPanel());
+      return;
+    }
+    servicePanel.className = "services-grid";
     servicePanel.replaceChildren(
       ...servicesIn(catId).map((service) =>
         el("article", { class: "service" }, [
@@ -171,7 +179,75 @@ if (serviceTabList) {
         ])
       )
     );
-  }).select("popular");
+  }, [{ id: "laser", name: "Laser hair removal" }]);
+
+  // services.html#laser opens straight on the laser price list
+  const openFromHash = () => {
+    tabs.select(location.hash === "#laser" ? "laser" : "popular");
+    if (location.hash === "#laser") serviceTabList.scrollIntoView({ block: "start" });
+  };
+  openFromHash();
+  window.addEventListener("hashchange", openFromHash);
+}
+
+// ===== Laser hair removal (Metro Smooth) =====
+function laserWhatsApp(item) {
+  const text = item
+    ? `Hi ${LASER.provider}, I'd like to book laser: ${item.name} (${formatPrice(item.price)}). When are you available?`
+    : `Hi ${LASER.provider}, I'd like to book a laser treatment.`;
+  return `https://wa.me/${LASER.whatsapp}?text=${encodeURIComponent(text)}`;
+}
+
+function laserList(title, items) {
+  return el("section", { class: "laser-group" }, [
+    el("h3", { text: title }),
+    el(
+      "ul",
+      { class: "price-list" },
+      items.map((item) =>
+        el("li", {}, [
+          el("span", { class: "price-name" }, [
+            el("strong", { text: item.name }),
+            item.detail ? el("span", { class: "price-detail", text: item.detail }) : null,
+          ]),
+          el("span", { class: "price-leader", "aria-hidden": "true" }),
+          el("span", { class: "price-amount", text: formatPrice(item.price) }),
+          el("a", {
+            class: "btn btn-small btn-outline-dark",
+            href: laserWhatsApp(item),
+            target: "_blank",
+            rel: "noopener noreferrer",
+            text: "Book",
+            "aria-label": `Book ${item.name} laser on WhatsApp`,
+          }),
+        ])
+      )
+    ),
+  ]);
+}
+
+function laserPanel() {
+  return [
+    el("div", { class: "laser-intro" }, [
+      el("div", {}, [
+        el("p", { class: "eyebrow", text: `${LASER.provider} · at Chaps & Co` }),
+        el("h3", { class: "laser-title", text: LASER.tagline }),
+        el("p", { text: `${LASER.promise} Book directly with ${LASER.provider}. Prepaid packages are available.` }),
+      ]),
+      el("div", { class: "laser-actions" }, [
+        el("a", { class: "btn btn-whatsapp", href: laserWhatsApp(), target: "_blank", rel: "noopener noreferrer", text: "WhatsApp to book" }),
+        el("a", { class: "btn btn-outline-dark", href: LASER.phoneLink, text: `Call ${LASER.phoneDisplay}` }),
+        el("a", {
+          class: "text-link",
+          href: `https://www.instagram.com/${LASER.instagram}/`,
+          target: "_blank",
+          rel: "noopener noreferrer",
+          text: `@${LASER.instagram} on Instagram`,
+        }),
+      ]),
+    ]),
+    el("div", { class: "laser-columns" }, [laserList("Treatments", LASER.treatments), laserList("Combo packages", LASER.combos)]),
+  ];
 }
 
 // ===== Team =====
