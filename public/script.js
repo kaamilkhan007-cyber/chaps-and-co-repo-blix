@@ -5,6 +5,7 @@ import {
   HOURS,
   LASER,
   PROFESSIONALS,
+  canDo,
   SERVICES,
   SHOP,
   addDays,
@@ -61,9 +62,9 @@ function avatarFor(pro) {
 }
 
 // Accessible tab bar. Calls onSelect(categoryId, tabId) when the active tab changes.
-// `extraTabs` adds tabs that aren't barber services (e.g. laser on the Services page).
-function buildTabs(tablist, idPrefix, onSelect, extraTabs = []) {
-  const tabs = [...CATEGORIES.filter((c) => servicesIn(c.id).length), ...extraTabs].map((cat) =>
+// `extraTabs` adds custom tabs; `include` picks which service categories get a tab.
+function buildTabs(tablist, idPrefix, onSelect, { extraTabs = [], include = () => true } = {}) {
+  const tabs = [...CATEGORIES.filter((c) => include(c) && servicesIn(c.id).length), ...extraTabs].map((cat) =>
     el("button", {
       type: "button",
       class: "tab",
@@ -179,7 +180,11 @@ if (serviceTabList) {
         ])
       )
     );
-  }, [{ id: "laser", name: "Laser hair removal" }]);
+  }, {
+    // Laser gets one tab here, shown as a price menu; the booking window lists it as two tabs
+    extraTabs: [{ id: "laser", name: "Laser hair removal" }],
+    include: (cat) => !cat.laser,
+  });
 
   // services.html#laser opens straight on the laser price list
   const openFromHash = () => {
@@ -191,14 +196,12 @@ if (serviceTabList) {
 }
 
 // ===== Laser hair removal (Metro Smooth) =====
-function laserWhatsApp(item) {
-  const text = item
-    ? `Hi ${LASER.provider}, I'd like to book laser: ${item.name} (${formatPrice(item.price)}). When are you available?`
-    : `Hi ${LASER.provider}, I'd like to book a laser treatment.`;
-  return `https://wa.me/${LASER.whatsapp}?text=${encodeURIComponent(text)}`;
+function laserWhatsApp() {
+  return `https://wa.me/${LASER.whatsapp}?text=${encodeURIComponent(`Hi ${LASER.provider}, I have a question about laser treatment.`)}`;
 }
 
-function laserList(title, items) {
+function laserList(title, catId) {
+  const items = servicesIn(catId);
   return el("section", { class: "laser-group" }, [
     el("h3", { text: title }),
     el(
@@ -207,18 +210,17 @@ function laserList(title, items) {
       items.map((item) =>
         el("li", {}, [
           el("span", { class: "price-name" }, [
-            el("strong", { text: item.name }),
+            el("strong", { text: item.short }),
             item.detail ? el("span", { class: "price-detail", text: item.detail }) : null,
           ]),
           el("span", { class: "price-leader", "aria-hidden": "true" }),
           el("span", { class: "price-amount", text: formatPrice(item.price) }),
-          el("a", {
+          el("button", {
+            type: "button",
             class: "btn btn-small btn-outline-dark",
-            href: laserWhatsApp(item),
-            target: "_blank",
-            rel: "noopener noreferrer",
             text: "Book",
-            "aria-label": `Book ${item.name} laser on WhatsApp`,
+            "aria-label": `Book laser ${item.short}`,
+            onclick: () => openBooking({ service: item }),
           }),
         ])
       )
@@ -232,10 +234,16 @@ function laserPanel() {
       el("div", {}, [
         el("p", { class: "eyebrow", text: `${LASER.provider} · at Chaps & Co` }),
         el("h3", { class: "laser-title", text: LASER.tagline }),
-        el("p", { text: `${LASER.promise} Book directly with ${LASER.provider}. Prepaid packages are available.` }),
+        el("p", { text: `${LASER.promise} Book any treatment online below. Prepaid packages are available from ${LASER.provider}.` }),
       ]),
       el("div", { class: "laser-actions" }, [
-        el("a", { class: "btn btn-whatsapp", href: laserWhatsApp(), target: "_blank", rel: "noopener noreferrer", text: "WhatsApp to book" }),
+        el("button", {
+          type: "button",
+          class: "btn",
+          text: "Book laser",
+          onclick: () => openBooking({ category: "laser-treatments" }),
+        }),
+        el("a", { class: "btn btn-whatsapp", href: laserWhatsApp(), target: "_blank", rel: "noopener noreferrer", text: "WhatsApp questions" }),
         el("a", { class: "btn btn-outline-dark", href: LASER.phoneLink, text: `Call ${LASER.phoneDisplay}` }),
         el("a", {
           class: "text-link",
@@ -246,7 +254,7 @@ function laserPanel() {
         }),
       ]),
     ]),
-    el("div", { class: "laser-columns" }, [laserList("Treatments", LASER.treatments), laserList("Combo packages", LASER.combos)]),
+    el("div", { class: "laser-columns" }, [laserList("Treatments", "laser-treatments"), laserList("Combo packages", "laser-combos")]),
   ];
 }
 
@@ -254,7 +262,7 @@ function laserPanel() {
 const teamGrid = $("#team-grid");
 if (teamGrid) {
   teamGrid.replaceChildren(
-    ...PROFESSIONALS.map((pro) =>
+    ...PROFESSIONALS.filter((p) => p.does === "barber").map((pro) =>
       el("article", { class: "barber" }, [
         avatarFor(pro),
         el("h3", { text: pro.name }),
@@ -419,14 +427,23 @@ function updateFoot() {
   ui.continueBtn.disabled = !service;
 }
 
+const prosFor = (service) => PROFESSIONALS.filter((p) => canDo(p, service));
+
+// After choosing a service: skip the professional step when there's only one choice
+// (laser is always Metro Smooth) or the customer already picked a barber who does it.
 function afterService() {
-  if (!booking.service) return;
-  goTo(booking.proLocked ? "time" : "professional");
+  const { service } = booking;
+  if (!service) return;
+  const pros = prosFor(service);
+  if (booking.pro && !canDo(booking.pro, service)) booking.pro = null;
+  if (pros.length === 1) booking.pro = pros[0];
+  goTo(booking.pro && (booking.proLocked || pros.length === 1) ? "time" : "professional");
 }
 
 function renderProfessionals() {
+  const pros = prosFor(booking.service);
   ui.proList.replaceChildren(
-    ...[ANY_PRO, ...PROFESSIONALS].map((pro) =>
+    ...(pros.length > 1 ? [ANY_PRO, ...pros] : pros).map((pro) =>
       el(
         "button",
         {
@@ -648,10 +665,14 @@ async function submitBooking(event) {
   }
 }
 
-// WhatsApp message from the customer to the shop with the confirmed booking
+// WhatsApp message from the customer with the confirmed booking: laser bookings go to
+// Metro Smooth, everything else to the barbershop.
 function bookingWhatsAppLink(saved, { phone, email, note }) {
+  const isLaser = SERVICES.find((s) => s.id === saved.service)?.provider === "laser";
   const lines = [
-    "Hi Chaps & Co, I've just booked an appointment on your website:",
+    isLaser
+      ? `Hi ${LASER.provider}, I've just booked a laser appointment on the Chaps & Co website:`
+      : "Hi Chaps & Co, I've just booked an appointment on your website:",
     "",
     `Reference: ${saved.ref}`,
     `Service: ${saved.serviceName} (${formatPrice(saved.price)})`,
@@ -664,7 +685,8 @@ function bookingWhatsAppLink(saved, { phone, email, note }) {
     `Email: ${email}`,
   ];
   if (note) lines.push(`Note: ${note}`);
-  return whatsappLink(lines.join("\n"));
+  const number = isLaser ? LASER.whatsapp : SHOP.whatsapp;
+  return `https://wa.me/${number}?text=${encodeURIComponent(lines.join("\n"))}`;
 }
 
 function showConfirmation(saved, waLink) {
@@ -695,8 +717,10 @@ function showConfirmation(saved, waLink) {
       }),
     ]),
     el("p", { class: "muted small" }, [
-      "Need to change or cancel? Call or WhatsApp us on ",
-      el("a", { href: SHOP.phoneLink, text: SHOP.phoneDisplay }),
+      "Need to change or cancel? Call or WhatsApp ",
+      ...(SERVICES.find((s) => s.id === saved.service)?.provider === "laser"
+        ? [`${LASER.provider} on `, el("a", { href: LASER.phoneLink, text: LASER.phoneDisplay })]
+        : ["us on ", el("a", { href: SHOP.phoneLink, text: SHOP.phoneDisplay })]),
       " and quote your reference.",
     ])
   );
@@ -714,7 +738,7 @@ function showStep(step) {
   ui.foot.hidden = step !== "service";
 
   if (step === "service") {
-    ui.tabs.select(booking.service ? booking.service.cats[0] : "popular");
+    ui.tabs.select(booking.service ? booking.service.cats[0] : booking.category || "popular");
     updateFoot();
   }
   if (step === "professional") renderProfessionals();
@@ -738,10 +762,12 @@ function goBack() {
   showStep(booking.history[booking.history.length - 1]);
 }
 
-function openBooking({ service = null, pro = null } = {}) {
+// `category` opens the service list on a tab (e.g. "laser-treatments") with nothing preselected.
+function openBooking({ service = null, pro = null, category = null } = {}) {
   if (!ui) ui = createBookingUI();
   Object.assign(booking, {
-    service: service || SERVICES.find((s) => s.id === BOOKING.defaultServiceId) || null,
+    service: service || (category ? null : SERVICES.find((s) => s.id === BOOKING.defaultServiceId) || null),
+    category,
     pro,
     proLocked: Boolean(pro),
     date: null,
@@ -753,9 +779,9 @@ function openBooking({ service = null, pro = null } = {}) {
   ui.form.querySelectorAll(".invalid").forEach((f) => f.classList.remove("invalid"));
 
   if (service) {
-    // Booking a specific service goes straight to choosing a professional (Back returns to services)
+    // Booking a specific service goes straight on to the next step (Back returns to services)
     booking.history.push("service");
-    goTo("professional");
+    afterService();
   } else {
     goTo("service");
   }
@@ -769,7 +795,10 @@ function closeBooking() {
   document.documentElement.classList.remove("no-scroll");
 }
 
-document.querySelectorAll("[data-book]").forEach((button) => button.addEventListener("click", () => openBooking()));
+// data-book="laser-treatments" opens the booking window on that service tab
+document.querySelectorAll("[data-book]").forEach((button) =>
+  button.addEventListener("click", () => openBooking({ category: button.dataset.book || null }))
+);
 
 // ===== Trading hours & open status (shop time, Africa/Johannesburg) =====
 document.querySelectorAll("[data-hours-table] tbody").forEach((body) => {

@@ -85,7 +85,7 @@ function renderDays(days, calendarOn) {
                   el(
                     "tr",
                     {},
-                    ["Time", "Service", "Barber", "Customer", "Phone", "Email", "Note", "Ref", ""].map((h) => el("th", { text: h }))
+                    ["Time", "Service", "Professional", "Customer", "Phone", "Email", "Note", "Ref", ""].map((h) => el("th", { text: h }))
                   )
                 ),
                 el(

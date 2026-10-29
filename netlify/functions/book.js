@@ -1,7 +1,7 @@
 // POST /api/book  { service, pro, date, time, name, phone, note }
 // Re-checks the time on the server and claims it atomically before saving,
 // so a professional can only ever be booked once for any given time.
-import { PROFESSIONALS, daySlots, toMinutes } from "../../public/shop-data.js";
+import { PROFESSIONALS, canDo, daySlots, toMinutes } from "../../public/shop-data.js";
 import { addToCalendar, removeFromCalendar } from "../lib/calendar.js";
 import {
   claimSlot,
@@ -48,6 +48,7 @@ export default async (req, context) => {
 
   if (!service) return fail("Please choose a service.");
   if (!wantsAny && !pro) return fail("Please choose a professional.");
+  if (pro && !canDo(pro, service)) return fail(`${pro.name} doesn't offer ${service.name}. Please choose another professional.`);
   if (!isBookableDate(date) || !time) return fail("Please choose a valid date and time.");
   if (name.length < 2) return fail("Please enter your name.");
   if (!/^[0-9 +()-]{9,20}$/.test(phone) || phone.replace(/\D/g, "").length < 9) {

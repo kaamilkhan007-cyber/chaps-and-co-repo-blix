@@ -36,72 +36,85 @@ export const CATEGORIES = [
   { id: "beard", name: "Beard & Shave" },
   { id: "waxing", name: "Waxing" },
   { id: "therapy", name: "Therapy" },
+  { id: "laser-treatments", name: "Laser treatments", laser: true },
+  { id: "laser-combos", name: "Laser combos", laser: true },
 ];
 
+// `provider` says who does the service: "barber" (default) or "laser" (Metro Smooth).
+const barber = (s) => ({ provider: "barber", ...s });
+// Laser durations are estimates for the booking calendar; adjust them to Metro Smooth's real times.
+const laser = (cat) => (s) => ({ provider: "laser", cats: [cat], ...s });
+const treatment = laser("laser-treatments");
+const combo = laser("laser-combos");
+
 export const SERVICES = [
-  { id: "haircut", name: "Haircut", mins: 20, price: 160, cats: ["popular", "haircuts"] },
-  { id: "haircut-shave", name: "Haircut & Shave", mins: 60, price: 300, cats: ["popular", "haircuts", "beard"] },
-  { id: "haircut-wash-style", name: "Haircut, Wash & Style", mins: 60, price: 350, cats: ["haircuts"] },
-  { id: "senior-haircut", name: "Senior Haircut (gents 65+)", mins: 20, price: 100, cats: ["haircuts"] },
-  { id: "womens-haircut", name: "Women's Haircut", mins: 80, price: 550, cats: ["popular", "haircuts"] },
-  { id: "hair-colour", name: "Hair Colour (gents)", mins: 25, price: 150, cats: ["popular", "colour"] },
-  { id: "haircut-colour-wash", name: "Haircut, Colour & Wash", mins: 60, price: 350, cats: ["colour"] },
-  { id: "beard-trim", name: "Beard Trim & Shape", mins: 20, price: 140, cats: ["popular", "beard"] },
-  { id: "hot-towel-shave", name: "Hot Towel Clean Shave", mins: 20, price: 120, cats: ["beard"] },
-  { id: "nose-wax", name: "Nose Wax", mins: 15, price: 50, cats: ["waxing"] },
-  { id: "ear-wax", name: "Ear Wax", mins: 15, price: 50, cats: ["waxing"] },
-  { id: "cheeks-wax", name: "Cheeks Wax", mins: 15, price: 50, cats: ["waxing"] },
-  { id: "massage", name: "Holistic Healing Massage", mins: 60, price: 350, cats: ["popular", "therapy"] },
+  barber({ id: "haircut", name: "Haircut", mins: 20, price: 160, cats: ["popular", "haircuts"] }),
+  barber({ id: "haircut-shave", name: "Haircut & Shave", mins: 60, price: 300, cats: ["popular", "haircuts", "beard"] }),
+  barber({ id: "haircut-wash-style", name: "Haircut, Wash & Style", mins: 60, price: 350, cats: ["haircuts"] }),
+  barber({ id: "senior-haircut", name: "Senior Haircut (gents 65+)", mins: 20, price: 100, cats: ["haircuts"] }),
+  barber({ id: "womens-haircut", name: "Women's Haircut", mins: 80, price: 550, cats: ["popular", "haircuts"] }),
+  barber({ id: "hair-colour", name: "Hair Colour (gents)", mins: 25, price: 150, cats: ["popular", "colour"] }),
+  barber({ id: "haircut-colour-wash", name: "Haircut, Colour & Wash", mins: 60, price: 350, cats: ["colour"] }),
+  barber({ id: "beard-trim", name: "Beard Trim & Shape", mins: 20, price: 140, cats: ["popular", "beard"] }),
+  barber({ id: "hot-towel-shave", name: "Hot Towel Clean Shave", mins: 20, price: 120, cats: ["beard"] }),
+  barber({ id: "nose-wax", name: "Nose Wax", mins: 15, price: 50, cats: ["waxing"] }),
+  barber({ id: "ear-wax", name: "Ear Wax", mins: 15, price: 50, cats: ["waxing"] }),
+  barber({ id: "cheeks-wax", name: "Cheeks Wax", mins: 15, price: 50, cats: ["waxing"] }),
+  barber({ id: "massage", name: "Holistic Healing Massage", mins: 60, price: 350, cats: ["popular", "therapy"] }),
+
+  // Laser hair removal (Metro Smooth): treatments
+  treatment({ id: "laser-beard-line", name: "Laser: Beard line", short: "Beard line", detail: "Above cheek line", mins: 20, price: 150 }),
+  treatment({ id: "laser-neck", name: "Laser: Neck", short: "Neck", detail: "Around Adam's apple till beard", mins: 15, price: 100 }),
+  treatment({ id: "laser-nape", name: "Laser: Nape", short: "Nape", detail: "Back of neck & hairline", mins: 15, price: 100 }),
+  treatment({ id: "laser-ears", name: "Laser: Ears", short: "Ears", mins: 15, price: 150 }),
+  treatment({ id: "laser-between-brows", name: "Laser: Between brows", short: "Between brows", mins: 15, price: 80 }),
+  treatment({ id: "laser-underarms", name: "Laser: Underarms", short: "Underarms", mins: 20, price: 250 }),
+  treatment({ id: "laser-shoulders", name: "Laser: Shoulders", short: "Shoulders", mins: 20, price: 200 }),
+  treatment({ id: "laser-half-arms", name: "Laser: Half arms", short: "Half arms", mins: 30, price: 400 }),
+  treatment({ id: "laser-full-arms", name: "Laser: Full arms", short: "Full arms", mins: 45, price: 600 }),
+  treatment({ id: "laser-fingers", name: "Laser: Fingers", short: "Fingers", mins: 15, price: 100 }),
+  treatment({ id: "laser-chest", name: "Laser: Chest", short: "Chest", mins: 30, price: 350 }),
+  treatment({ id: "laser-abdomen", name: "Laser: Abdomen", short: "Abdomen", mins: 30, price: 350 }),
+  treatment({ id: "laser-belly-line", name: "Laser: Belly line", short: "Belly line", detail: "Till above abdominal bone", mins: 15, price: 200 }),
+  treatment({ id: "laser-upper-back", name: "Laser: Upper back", short: "Upper back", mins: 30, price: 350 }),
+  treatment({ id: "laser-lower-back", name: "Laser: Lower back", short: "Lower back", mins: 30, price: 350 }),
+  treatment({ id: "laser-full-back", name: "Laser: Full back", short: "Full back", mins: 45, price: 600 }),
+  treatment({ id: "laser-half-leg", name: "Laser: Half leg", short: "Half leg", mins: 40, price: 500 }),
+  treatment({ id: "laser-full-leg", name: "Laser: Full leg", short: "Full leg", mins: 60, price: 900 }),
+  treatment({ id: "laser-toes", name: "Laser: Toes", short: "Toes", mins: 15, price: 100 }),
+
+  // Laser hair removal (Metro Smooth): combo packages
+  combo({ id: "laser-metro-precision", name: "Laser: Metro Precision", short: "Metro Precision", detail: "Beard line, neck, nape & underarms", mins: 45, price: 450 }),
+  combo({ id: "laser-chest-abdomen", name: "Laser: Chest & abdomen", short: "Chest & abdomen", mins: 45, price: 600 }),
+  combo({ id: "laser-arms-leg-underarms", name: "Laser: Half arms, half leg & underarms", short: "Half arms, half leg & underarms", mins: 75, price: 900 }),
+  combo({ id: "laser-legs-underarms", name: "Laser: Full legs & underarms", short: "Full legs & underarms", mins: 75, price: 900 }),
+  combo({ id: "laser-back-chest-underarms", name: "Laser: Back, chest & underarms", short: "Back, chest & underarms", mins: 75, price: 900 }),
+  combo({ id: "laser-arms-legs", name: "Laser: Full arms & full legs", short: "Full arms & full legs", mins: 90, price: 1200 }),
+  combo({ id: "laser-metro-sleek", name: "Laser: Metro Sleek", short: "Metro Sleek", detail: "Beard line, neck, nape, ears, underarms, shoulders, chest & full arms", mins: 90, price: 1200 }),
+  combo({ id: "laser-metro-platinum", name: "Laser: Metro Platinum", short: "Metro Platinum", detail: "Full body, excluding bikini & buttocks", mins: 150, price: 2000 }),
 ];
 
 // Every professional takes one booking at a time during trading hours.
+// `does` matches a service's provider: barbers cut hair, Metro Smooth does the laser.
 export const PROFESSIONALS = [
-  { id: "mohammed", name: "Mohammed", role: "Owner", photo: "images/mohammed.jpg" },
-  { id: "papu", name: "Papu", role: "Big Boss" },
-  { id: "ahmad", name: "Ahmad", role: "Barber" },
+  { id: "mohammed", name: "Mohammed", role: "Owner", photo: "images/mohammed.jpg", does: "barber" },
+  { id: "papu", name: "Papu", role: "Big Boss", does: "barber" },
+  { id: "ahmad", name: "Ahmad", role: "Barber", does: "barber" },
+  { id: "metro-smooth", name: "Metro Smooth", role: "Laser technician", does: "laser" },
 ];
 
+export const canDo = (pro, service) => pro.does === (service.provider || "barber");
+
 // Laser hair removal by Metro Smooth at Chaps & Co (Raslouw Corner).
-// Booked directly with Metro Smooth, not through the barber booking system.
 export const LASER = {
   provider: "Metro Smooth",
+  proId: "metro-smooth",
   tagline: "Precision laser for men",
   promise: "Discreet. Professional. Proven results.",
   phoneDisplay: "060 786 6387",
   phoneLink: "tel:+27607866387",
   whatsapp: "27607866387",
   instagram: "metrosmoooth",
-  treatments: [
-    { name: "Beard line", detail: "Above cheek line", price: 150 },
-    { name: "Neck", detail: "Around Adam's apple till beard", price: 100 },
-    { name: "Nape", detail: "Back of neck & hairline", price: 100 },
-    { name: "Ears", price: 150 },
-    { name: "Between brows", price: 80 },
-    { name: "Underarms", price: 250 },
-    { name: "Shoulders", price: 200 },
-    { name: "Half arms", price: 400 },
-    { name: "Full arms", price: 600 },
-    { name: "Fingers", price: 100 },
-    { name: "Chest", price: 350 },
-    { name: "Abdomen", price: 350 },
-    { name: "Belly line", detail: "Till above abdominal bone", price: 200 },
-    { name: "Upper back", price: 350 },
-    { name: "Lower back", price: 350 },
-    { name: "Full back", price: 600 },
-    { name: "Half leg", price: 500 },
-    { name: "Full leg", price: 900 },
-    { name: "Toes", price: 100 },
-  ],
-  combos: [
-    { name: "Metro Precision", detail: "Beard line, neck, nape & underarms", price: 450 },
-    { name: "Chest & abdomen", price: 600 },
-    { name: "Half arms, half leg & underarms", price: 900 },
-    { name: "Full legs & underarms", price: 900 },
-    { name: "Back, chest & underarms", price: 900 },
-    { name: "Full arms & full legs", price: 1200 },
-    { name: "Metro Sleek", detail: "Beard line, neck, nape, ears, underarms, shoulders, chest & full arms", price: 1200 },
-    { name: "Metro Platinum", detail: "Full body, excluding bikini & buttocks", price: 2000 },
-  ],
 };
 
 export const DAY_NAMES =["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -166,7 +179,7 @@ export function daySlots(dateKey, service, bookings, now = shopNow()) {
     const free =
       start < earliest
         ? []
-        : PROFESSIONALS.filter((p) => !active.some((b) => b.proId === p.id && b.start < end && start < b.end)).map(
+        : PROFESSIONALS.filter((p) => canDo(p, service) && !active.some((b) => b.proId === p.id && b.start < end && start < b.end)).map(
             (p) => p.id
           );
     slots.push({ time: fromMinutes(start), free, past: start < earliest });
